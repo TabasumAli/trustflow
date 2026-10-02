@@ -17,90 +17,247 @@ st.set_page_config(
 )
 
 # ============================================================
-# GLOBAL STYLES
+# GLOBAL STYLES — dark theme, yellow/orange accents
 # ============================================================
 st.markdown(
     """
     <style>
-        .stApp { background: #f7f8fc; }
-        section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-            color: #e2e8f0;
+        /* Base */
+        .stApp {
+            background: #0a0a0a;
+            color: #f5f5f5;
         }
-        section[data-testid="stSidebar"] * { color: #e2e8f0 !important; }
+        .main, .block-container { background: #0a0a0a; }
+        html, body, [class*="css"] { color: #f5f5f5; }
+
+        /* Sidebar */
+        section[data-testid="stSidebar"] {
+            background: #111111;
+            border-right: 1px solid #222;
+        }
+        section[data-testid="stSidebar"] * { color: #f5f5f5 !important; }
         section[data-testid="stSidebar"] input {
-            background: #1e293b !important;
-            color: #f1f5f9 !important;
+            background: #1c1c1c !important;
+            color: #f5f5f5 !important;
+            border: 1px solid #333 !important;
+            border-radius: 8px;
         }
 
+        /* Typography */
+        h1, h2, h3, h4, h5, h6, p, span, label, div { color: #f5f5f5; }
+
+        /* Header banner */
         .tf-header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
             padding: 28px 32px;
             border-radius: 16px;
-            color: white;
+            color: #0a0a0a;
             margin-bottom: 24px;
-            box-shadow: 0 8px 24px rgba(79,70,229,0.25);
+            box-shadow: 0 8px 32px rgba(245,158,11,0.25);
         }
-        .tf-header h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-        .tf-header p { margin: 6px 0 0 0; opacity: 0.9; font-size: 14px; }
+        .tf-header h1 {
+            margin: 0; font-size: 28px; font-weight: 800;
+            letter-spacing: -0.5px; color: #0a0a0a;
+        }
+        .tf-header p {
+            margin: 6px 0 0 0; opacity: 0.85; font-size: 14px;
+            color: #0a0a0a; font-weight: 500;
+        }
 
+        /* Cards */
         .tf-card {
-            background: white;
+            background: #141414;
             border-radius: 14px;
-            padding: 20px 22px;
-            box-shadow: 0 2px 10px rgba(15,23,42,0.05);
-            border: 1px solid #e5e7eb;
+            padding: 18px 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+            border: 1px solid #262626;
         }
 
-        .tf-metric-label { color: #64748b; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tf-metric-value { color: #0f172a; font-size: 26px; font-weight: 700; margin-top: 4px; }
+        .tf-metric-label {
+            color: #a3a3a3; font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .tf-metric-value {
+            color: #f5f5f5; font-size: 24px; font-weight: 700;
+            margin-top: 6px;
+        }
 
+        /* Verdict card */
         .tf-verdict-card {
             border-radius: 16px;
             padding: 28px 32px;
             margin-bottom: 20px;
-            color: white;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            border: 1px solid #262626;
+            background: #141414;
         }
-        .tf-verdict-approve { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-        .tf-verdict-review  { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-        .tf-verdict-reject  { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-        .tf-verdict-unknown { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); }
+        .tf-verdict-approve { border-left: 8px solid #22c55e; }
+        .tf-verdict-review  { border-left: 8px solid #f59e0b; }
+        .tf-verdict-reject  { border-left: 8px solid #ef4444; }
+        .tf-verdict-unknown { border-left: 8px solid #6b7280; }
 
-        .tf-verdict-label { font-size: 12px; opacity: 0.85; letter-spacing: 1.5px; text-transform: uppercase; }
-        .tf-verdict-title { font-size: 42px; font-weight: 800; margin: 4px 0 8px 0; letter-spacing: -1px; }
-        .tf-verdict-meta { font-size: 14px; opacity: 0.92; }
+        .tf-verdict-label {
+            font-size: 12px; color: #a3a3a3; letter-spacing: 1.5px;
+            text-transform: uppercase; font-weight: 600;
+        }
+        .tf-verdict-title {
+            font-size: 42px; font-weight: 800; margin: 4px 0 8px 0;
+            letter-spacing: -1px; color: #f5f5f5;
+        }
+        .tf-verdict-title.approve { color: #22c55e; }
+        .tf-verdict-title.review  { color: #f59e0b; }
+        .tf-verdict-title.reject  { color: #ef4444; }
+        .tf-verdict-meta { font-size: 14px; color: #d4d4d4; }
 
-        .tf-rule-pass { padding: 10px 14px; border-radius: 10px; background: #f0fdf4; border-left: 4px solid #10b981; margin-bottom: 8px; }
-        .tf-rule-fail { padding: 10px 14px; border-radius: 10px; background: #fef2f2; border-left: 4px solid #ef4444; margin-bottom: 8px; }
-        .tf-rule-name { font-weight: 600; color: #0f172a; font-size: 14px; }
-        .tf-rule-meta { font-size: 12px; color: #64748b; margin-left: 8px; }
-        .tf-rule-reason { font-size: 13px; color: #b91c1c; margin-top: 4px; }
+        /* Rule rows */
+        .tf-rule-pass {
+            padding: 12px 16px; border-radius: 10px;
+            background: #0f1a12; border-left: 4px solid #22c55e;
+            margin-bottom: 8px;
+        }
+        .tf-rule-fail {
+            padding: 12px 16px; border-radius: 10px;
+            background: #1a0f0f; border-left: 4px solid #ef4444;
+            margin-bottom: 8px;
+        }
+        .tf-rule-name { font-weight: 600; color: #f5f5f5; font-size: 14px; }
+        .tf-rule-meta { font-size: 12px; color: #a3a3a3; margin-left: 8px; }
+        .tf-rule-reason { font-size: 13px; color: #fca5a5; margin-top: 4px; }
 
+        /* Section title */
         .tf-section-title {
-            font-size: 18px; font-weight: 700; color: #0f172a;
-            margin: 28px 0 12px 0; display: flex; align-items: center; gap: 8px;
+            font-size: 18px; font-weight: 700; color: #f5f5f5;
+            margin: 28px 0 12px 0;
+            border-bottom: 2px solid #f59e0b;
+            padding-bottom: 8px;
+            display: inline-block;
         }
 
+        /* Buttons — yellow/orange */
         .stButton > button {
             border-radius: 10px;
-            font-weight: 600;
-            padding: 8px 18px;
+            font-weight: 700;
+            padding: 10px 22px;
             transition: all 0.2s ease;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: #0a0a0a;
             border: none;
+            box-shadow: 0 4px 14px rgba(245,158,11,0.35);
         }
-        .stButton > button[kind="primary"] {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            color: white;
-            box-shadow: 0 4px 12px rgba(79,70,229,0.3);
-        }
-        .stButton > button[kind="primary"]:hover {
+        .stButton > button:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(79,70,229,0.4);
+            box-shadow: 0 6px 20px rgba(245,158,11,0.55);
+            color: #0a0a0a;
+        }
+        .stButton > button:disabled {
+            background: #262626 !important;
+            color: #6b7280 !important;
+            box-shadow: none;
+            opacity: 0.6;
         }
 
-        div[data-testid="stMetricValue"] { font-size: 26px; font-weight: 700; color: #0f172a; }
-        div[data-testid="stMetricLabel"] { color: #64748b; font-size: 12px; text-transform: uppercase; }
+        /* Download button */
+        .stDownloadButton > button {
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 10px 22px;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: #0a0a0a;
+            border: none;
+            box-shadow: 0 4px 14px rgba(245,158,11,0.35);
+        }
+        .stDownloadButton > button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(245,158,11,0.55);
+            color: #0a0a0a;
+        }
+
+        /* Metrics */
+        div[data-testid="stMetricValue"] {
+            font-size: 26px; font-weight: 700; color: #f59e0b;
+        }
+        div[data-testid="stMetricLabel"] {
+            color: #a3a3a3; font-size: 11px; text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        div[data-testid="stMetric"] {
+            background: #141414;
+            border: 1px solid #262626;
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #262626;
+        }
+        .stTabs [data-baseweb="tab"] {
+            background: #141414;
+            color: #a3a3a3;
+            border-radius: 10px 10px 0 0;
+            padding: 10px 20px;
+            font-weight: 600;
+            border: 1px solid #262626;
+            border-bottom: none;
+        }
+        .stTabs [aria-selected="true"] {
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: #0a0a0a !important;
+        }
+
+        /* Dataframes */
+        .stDataFrame, div[data-testid="stDataFrame"] {
+            background: #141414;
+            border-radius: 10px;
+            border: 1px solid #262626;
+        }
+
+        /* Expanders */
+        details {
+            background: #141414 !important;
+            border: 1px solid #262626 !important;
+            border-radius: 10px !important;
+        }
+        details summary {
+            color: #f5f5f5 !important;
+            font-weight: 600;
+        }
+
+        /* Alerts */
+        .stAlert {
+            border-radius: 10px;
+            border: 1px solid #262626;
+            background: #141414;
+        }
+
+        /* Inputs & selects */
+        .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+            background: #1c1c1c !important;
+            color: #f5f5f5 !important;
+            border: 1px solid #333 !important;
+            border-radius: 8px;
+        }
+
+        /* File uploader */
+        section[data-testid="stFileUploaderDropzone"] {
+            background: #141414;
+            border: 2px dashed #333;
+            border-radius: 12px;
+        }
+        section[data-testid="stFileUploaderDropzone"]:hover {
+            border-color: #f59e0b;
+        }
+
+        /* Divider */
+        hr { border-color: #262626; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -116,8 +273,8 @@ with st.sidebar:
     st.markdown(
         """
         <div style="padding: 10px 0 20px 0;">
-            <div style="font-size: 22px; font-weight: 700;">🛡️ TrustFlow</div>
-            <div style="font-size: 12px; opacity: 0.75;">AI Invoice Audit</div>
+            <div style="font-size: 22px; font-weight: 800; color: #f59e0b;">🛡️ TrustFlow</div>
+            <div style="font-size: 12px; opacity: 0.7;">AI Invoice Audit</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -142,8 +299,8 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(
         """
-        <div style="font-size: 11px; opacity: 0.65; line-height: 1.6;">
-            Get a key at <a href="https://console.groq.com/keys" target="_blank" style="color:#a5b4fc;">console.groq.com/keys</a>
+        <div style="font-size: 11px; opacity: 0.6; line-height: 1.6;">
+            Get a key at <a href="https://console.groq.com/keys" target="_blank" style="color:#f59e0b;">console.groq.com/keys</a>
         </div>
         """,
         unsafe_allow_html=True,
@@ -186,10 +343,10 @@ def build_pdf_report(result: dict) -> bytes:
     )
 
     styles = getSampleStyleSheet()
-    h1 = ParagraphStyle("h1", parent=styles["Heading1"], fontSize=20, spaceAfter=10, textColor=colors.HexColor("#4f46e5"))
-    h2 = ParagraphStyle("h2", parent=styles["Heading2"], fontSize=13, spaceAfter=6, textColor=colors.HexColor("#1e293b"))
-    body = ParagraphStyle("body", parent=styles["BodyText"], fontSize=10, leading=14)
-    small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=9, textColor=colors.HexColor("#64748b"))
+    h1 = ParagraphStyle("h1", parent=styles["Heading1"], fontSize=20, spaceAfter=10, textColor=colors.HexColor("#ea580c"))
+    h2 = ParagraphStyle("h2", parent=styles["Heading2"], fontSize=13, spaceAfter=6, textColor=colors.HexColor("#0a0a0a"))
+    body = ParagraphStyle("body", parent=styles["BodyText"], fontSize=10, leading=14, textColor=colors.HexColor("#0a0a0a"))
+    small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=9, textColor=colors.HexColor("#525252"))
 
     story = []
     verdict = result.get("verdict", "UNKNOWN")
@@ -198,16 +355,14 @@ def build_pdf_report(result: dict) -> bytes:
     invoice = result.get("invoice", {}) or {}
     checks = result.get("checks", [])
 
-    # Header
     story.append(Paragraph("🛡️ TrustFlow — Audit Report", h1))
     story.append(Paragraph(f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}", small))
     story.append(Spacer(1, 12))
 
-    # Verdict banner
     verdict_color = {
-        "APPROVE": colors.HexColor("#10b981"),
-        "REVIEW": colors.HexColor("#f59e0b"),
-        "REJECT": colors.HexColor("#ef4444"),
+        "APPROVE": colors.HexColor("#16a34a"),
+        "REVIEW": colors.HexColor("#ea580c"),
+        "REJECT": colors.HexColor("#dc2626"),
     }.get(verdict, colors.HexColor("#6b7280"))
 
     banner = Table(
@@ -228,15 +383,14 @@ def build_pdf_report(result: dict) -> bytes:
     story.append(Paragraph(f"<b>Confidence:</b> {confidence*100:.0f}%", body))
     story.append(Spacer(1, 10))
 
-    # Invoice details
     story.append(Paragraph("Invoice Details", h2))
     inv_rows = [[Paragraph(f"<b>{k.replace('_',' ').title()}</b>", body), Paragraph(str(v if v not in (None,'') else '—'), body)] for k, v in invoice.items()]
     if inv_rows:
         t = Table(inv_rows, colWidths=[50*mm, 120*mm])
         t.setStyle(TableStyle([
-            ("BACKGROUND", (0,0), (0,-1), colors.HexColor("#f1f5f9")),
-            ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
-            ("INNERGRID", (0,0), (-1,-1), 0.25, colors.HexColor("#e2e8f0")),
+            ("BACKGROUND", (0,0), (0,-1), colors.HexColor("#f5f5f5")),
+            ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#d4d4d4")),
+            ("INNERGRID", (0,0), (-1,-1), 0.25, colors.HexColor("#e5e5e5")),
             ("LEFTPADDING", (0,0), (-1,-1), 8),
             ("RIGHTPADDING", (0,0), (-1,-1), 8),
             ("TOPPADDING", (0,0), (-1,-1), 6),
@@ -245,7 +399,6 @@ def build_pdf_report(result: dict) -> bytes:
         story.append(t)
     story.append(Spacer(1, 14))
 
-    # Summary
     story.append(Paragraph("Summary", h2))
     story.append(Paragraph(result.get("summary", "—"), body))
     story.append(Spacer(1, 8))
@@ -255,7 +408,6 @@ def build_pdf_report(result: dict) -> bytes:
         story.append(Paragraph(f"<i>Routing reason:</i> {result['routing_reason']}", small))
     story.append(Spacer(1, 14))
 
-    # Rule checks
     story.append(Paragraph("Rule Checks", h2))
     rule_rows = [["Rule", "Status", "Severity", "Reason"]]
     for c in checks:
@@ -267,23 +419,17 @@ def build_pdf_report(result: dict) -> bytes:
         ])
     t = Table(rule_rows, colWidths=[45*mm, 20*mm, 22*mm, 83*mm])
     t.setStyle(TableStyle([
-        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#4f46e5")),
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#ea580c")),
         ("TEXTCOLOR", (0,0), (-1,0), colors.white),
         ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-        ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
-        ("INNERGRID", (0,0), (-1,-1), 0.25, colors.HexColor("#e2e8f0")),
+        ("BOX", (0,0), (-1,-1), 0.5, colors.HexColor("#d4d4d4")),
+        ("INNERGRID", (0,0), (-1,-1), 0.25, colors.HexColor("#e5e5e5")),
         ("LEFTPADDING", (0,0), (-1,-1), 6),
         ("RIGHTPADDING", (0,0), (-1,-1), 6),
         ("TOPPADDING", (0,0), (-1,-1), 5),
         ("BOTTOMPADDING", (0,0), (-1,-1), 5),
     ]))
     story.append(t)
-    story.append(Spacer(1, 12))
-
-    # Footer
-    trace_url = result.get("trace_url")
-    if trace_url:
-        story.append(Paragraph(f"LangSmith trace: {trace_url}", small))
 
     doc.build(story)
     buffer.seek(0)
@@ -297,7 +443,6 @@ with tab_setup:
     st.markdown('<div class="tf-section-title">⚙️ Setup — Vendors & Rules</div>', unsafe_allow_html=True)
     st.caption("Upload your vendors and rules to Supabase. Manage what's currently stored below.")
 
-    # ---- Danger Zone (top of tab) ----
     with st.expander("🗑️ Database Management", expanded=False):
         st.caption("Remove stored vendors or rules for this organization. Invoices and past audits are not affected.")
         col_d1, col_d2, col_d3 = st.columns(3)
@@ -306,7 +451,7 @@ with tab_setup:
                 try:
                     existing = db.get_vendors(DEMO_ORG_ID)
                     if not existing:
-                        st.warning("No vendors found in the database — nothing to delete.")
+                        st.warning("No vendors found — nothing to delete.")
                     else:
                         deleted = db.delete_vendors(DEMO_ORG_ID)
                         st.success(f"Deleted {deleted or len(existing)} vendor(s).")
@@ -318,7 +463,7 @@ with tab_setup:
                 try:
                     existing = db.get_rules(DEMO_ORG_ID)
                     if not existing:
-                        st.warning("No rules found in the database — nothing to delete.")
+                        st.warning("No rules found — nothing to delete.")
                     else:
                         deleted = db.delete_rules(DEMO_ORG_ID)
                         st.success(f"Deleted {deleted or len(existing)} rule(s).")
@@ -344,14 +489,13 @@ with tab_setup:
 
     st.markdown("---")
 
-    # ---- Upload ----
     col1, col2 = st.columns(2)
     with col1:
         vendors_file = st.file_uploader("📁 vendors.csv", type=["csv"], key="vendors_up")
     with col2:
         rules_file = st.file_uploader("📁 rules.json", type=["json"], key="rules_up")
 
-    if st.button("⬆️ Save to Database", type="primary", use_container_width=False):
+    if st.button("⬆️ Save to Database", type="primary"):
         if not vendors_file and not rules_file:
             st.warning("Upload at least one file.")
         else:
@@ -366,8 +510,6 @@ with tab_setup:
                 st.error(f"Save failed: {e}")
 
     st.markdown("---")
-
-    # ---- Current Data ----
     st.markdown('<div class="tf-section-title">📊 Current Data</div>', unsafe_allow_html=True)
 
     c1, c2 = st.columns(2)
@@ -447,6 +589,12 @@ with tab_audit:
             "REJECT": "tf-verdict-reject",
         }.get(verdict, "tf-verdict-unknown")
 
+        title_class = {
+            "APPROVE": "approve",
+            "REVIEW": "review",
+            "REJECT": "reject",
+        }.get(verdict, "")
+
         icon = {"APPROVE": "✅", "REVIEW": "⚠️", "REJECT": "⛔"}.get(verdict, "❔")
 
         st.markdown(
@@ -455,7 +603,7 @@ with tab_audit:
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div>
                         <div class="tf-verdict-label">Audit Verdict</div>
-                        <div class="tf-verdict-title">{icon} {verdict}</div>
+                        <div class="tf-verdict-title {title_class}">{icon} {verdict}</div>
                         <div class="tf-verdict-meta">
                             <b>{invoice.get('vendor', 'Unknown vendor')}</b> &nbsp;·&nbsp;
                             {invoice.get('invoice_number', '—')} &nbsp;·&nbsp;
@@ -464,7 +612,7 @@ with tab_audit:
                     </div>
                     <div style="text-align:right;">
                         <div class="tf-verdict-label">Risk Score</div>
-                        <div class="tf-verdict-title">{score}<span style="font-size:20px;opacity:0.7;">/100</span></div>
+                        <div class="tf-verdict-title {title_class}">{score}<span style="font-size:20px;opacity:0.7;">/100</span></div>
                         <div class="tf-verdict-meta">Confidence: {confidence*100:.0f}%</div>
                     </div>
                 </div>
@@ -479,7 +627,6 @@ with tab_audit:
         c3.metric("High Severity Fails", sum(1 for c in checks if c.get("status") == "fail" and c.get("severity") == "high"))
         c4.metric("Gate Status", "✅ Passed" if result.get("gate", {}).get("passed") else "⚠️ Flagged")
 
-        # Download PDF
         try:
             pdf_bytes = build_pdf_report(result)
             fname = f"trustflow_report_{invoice.get('invoice_number','audit')}.pdf".replace(" ", "_")
@@ -488,7 +635,6 @@ with tab_audit:
                 data=pdf_bytes,
                 file_name=fname,
                 mime="application/pdf",
-                type="primary",
             )
         except Exception as e:
             st.warning(f"PDF report unavailable: {e}")
@@ -508,7 +654,7 @@ with tab_audit:
                     st.markdown(
                         f"<div class='tf-card'>"
                         f"<div class='tf-metric-label'>{k.replace('_',' ')}</div>"
-                        f"<div style='font-size:16px;font-weight:600;margin-top:4px;color:#0f172a'>{v if v not in (None,'') else '—'}</div>"
+                        f"<div class='tf-metric-value'>{v if v not in (None,'') else '—'}</div>"
                         f"</div>",
                         unsafe_allow_html=True,
                     )
