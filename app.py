@@ -22,15 +22,10 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        /* Base */
-        .stApp {
-            background: #0a0a0a;
-            color: #f5f5f5;
-        }
+        .stApp { background: #0a0a0a; color: #f5f5f5; }
         .main, .block-container { background: #0a0a0a; }
         html, body, [class*="css"] { color: #f5f5f5; }
 
-        /* Sidebar */
         section[data-testid="stSidebar"] {
             background: #111111;
             border-right: 1px solid #222;
@@ -43,10 +38,8 @@ st.markdown(
             border-radius: 8px;
         }
 
-        /* Typography */
         h1, h2, h3, h4, h5, h6, p, span, label, div { color: #f5f5f5; }
 
-        /* Header banner */
         .tf-header {
             background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
             padding: 28px 32px;
@@ -64,7 +57,6 @@ st.markdown(
             color: #0a0a0a; font-weight: 500;
         }
 
-        /* Cards */
         .tf-card {
             background: #141414;
             border-radius: 14px;
@@ -82,7 +74,6 @@ st.markdown(
             margin-top: 6px;
         }
 
-        /* Verdict card */
         .tf-verdict-card {
             border-radius: 16px;
             padding: 28px 32px;
@@ -109,7 +100,6 @@ st.markdown(
         .tf-verdict-title.reject  { color: #ef4444; }
         .tf-verdict-meta { font-size: 14px; color: #d4d4d4; }
 
-        /* Rule rows */
         .tf-rule-pass {
             padding: 12px 16px; border-radius: 10px;
             background: #0f1a12; border-left: 4px solid #22c55e;
@@ -124,7 +114,6 @@ st.markdown(
         .tf-rule-meta { font-size: 12px; color: #a3a3a3; margin-left: 8px; }
         .tf-rule-reason { font-size: 13px; color: #fca5a5; margin-top: 4px; }
 
-        /* Section title */
         .tf-section-title {
             font-size: 18px; font-weight: 700; color: #f5f5f5;
             margin: 28px 0 12px 0;
@@ -133,7 +122,6 @@ st.markdown(
             display: inline-block;
         }
 
-        /* Buttons — yellow/orange */
         .stButton > button {
             border-radius: 10px;
             font-weight: 700;
@@ -156,7 +144,6 @@ st.markdown(
             opacity: 0.6;
         }
 
-        /* Download button */
         .stDownloadButton > button {
             border-radius: 10px;
             font-weight: 700;
@@ -172,7 +159,6 @@ st.markdown(
             color: #0a0a0a;
         }
 
-        /* Metrics */
         div[data-testid="stMetricValue"] {
             font-size: 26px; font-weight: 700; color: #f59e0b;
         }
@@ -187,7 +173,6 @@ st.markdown(
             padding: 14px 16px;
         }
 
-        /* Tabs */
         .stTabs [data-baseweb="tab-list"] {
             gap: 8px;
             background: #0a0a0a;
@@ -207,14 +192,12 @@ st.markdown(
             color: #0a0a0a !important;
         }
 
-        /* Dataframes */
         .stDataFrame, div[data-testid="stDataFrame"] {
             background: #141414;
             border-radius: 10px;
             border: 1px solid #262626;
         }
 
-        /* Expanders */
         details {
             background: #141414 !important;
             border: 1px solid #262626 !important;
@@ -225,14 +208,12 @@ st.markdown(
             font-weight: 600;
         }
 
-        /* Alerts */
         .stAlert {
             border-radius: 10px;
             border: 1px solid #262626;
             background: #141414;
         }
 
-        /* Inputs & selects */
         .stTextInput input, .stSelectbox div[data-baseweb="select"] {
             background: #1c1c1c !important;
             color: #f5f5f5 !important;
@@ -240,7 +221,6 @@ st.markdown(
             border-radius: 8px;
         }
 
-        /* File uploader */
         section[data-testid="stFileUploaderDropzone"] {
             background: #141414;
             border: 2px dashed #333;
@@ -250,10 +230,8 @@ st.markdown(
             border-color: #f59e0b;
         }
 
-        /* Divider */
         hr { border-color: #262626; }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0a0a0a; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
@@ -355,7 +333,7 @@ def build_pdf_report(result: dict) -> bytes:
     invoice = result.get("invoice", {}) or {}
     checks = result.get("checks", [])
 
-    story.append(Paragraph("🛡️ TrustFlow — Audit Report", h1))
+    story.append(Paragraph("TrustFlow — Audit Report", h1))
     story.append(Paragraph(f"Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}", small))
     story.append(Spacer(1, 12))
 
@@ -443,49 +421,50 @@ with tab_setup:
     st.markdown('<div class="tf-section-title">⚙️ Setup — Vendors & Rules</div>', unsafe_allow_html=True)
     st.caption("Upload your vendors and rules to Supabase. Manage what's currently stored below.")
 
-    with st.expander("🗑️ Database Management", expanded=False):
-        st.caption("Remove stored vendors or rules for this organization. Invoices and past audits are not affected.")
-        col_d1, col_d2, col_d3 = st.columns(3)
-        with col_d1:
-            if st.button("🗑️ Delete All Vendors", use_container_width=True):
-                try:
-                    existing = db.get_vendors(DEMO_ORG_ID)
-                    if not existing:
-                        st.warning("No vendors found — nothing to delete.")
-                    else:
-                        deleted = db.delete_vendors(DEMO_ORG_ID)
-                        st.success(f"Deleted {deleted or len(existing)} vendor(s).")
-                        st.rerun()
-                except Exception as e:
-                    st.error(f"Delete failed: {e}")
-        with col_d2:
-            if st.button("🗑️ Delete All Rules", use_container_width=True):
-                try:
-                    existing = db.get_rules(DEMO_ORG_ID)
-                    if not existing:
-                        st.warning("No rules found — nothing to delete.")
-                    else:
-                        deleted = db.delete_rules(DEMO_ORG_ID)
-                        st.success(f"Deleted {deleted or len(existing)} rule(s).")
-                        st.rerun()
-                except Exception as e:
-                    st.error(f"Delete failed: {e}")
-        with col_d3:
-            if st.button("🗑️ Delete Both", use_container_width=True):
-                try:
-                    v = db.get_vendors(DEMO_ORG_ID)
-                    r = db.get_rules(DEMO_ORG_ID)
-                    if not v and not r:
-                        st.warning("No vendors or rules found — nothing to delete.")
-                    else:
-                        if v:
-                            db.delete_vendors(DEMO_ORG_ID)
-                        if r:
-                            db.delete_rules(DEMO_ORG_ID)
-                        st.success(f"Deleted {len(v)} vendor(s) and {len(r)} rule(s).")
-                        st.rerun()
-                except Exception as e:
-                    st.error(f"Delete failed: {e}")
+    st.markdown("### 🗑️ Database Management")
+    st.caption("Remove stored vendors or rules for this organization. Invoices and past audits are not affected.")
+
+    col_d1, col_d2, col_d3 = st.columns(3)
+    with col_d1:
+        if st.button("🗑️ Delete All Vendors", use_container_width=True):
+            try:
+                existing = db.get_vendors(DEMO_ORG_ID)
+                if not existing:
+                    st.warning("No vendors found — nothing to delete.")
+                else:
+                    deleted = db.delete_vendors(DEMO_ORG_ID)
+                    st.success(f"Deleted {deleted or len(existing)} vendor(s).")
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Delete failed: {e}")
+    with col_d2:
+        if st.button("🗑️ Delete All Rules", use_container_width=True):
+            try:
+                existing = db.get_rules(DEMO_ORG_ID)
+                if not existing:
+                    st.warning("No rules found — nothing to delete.")
+                else:
+                    deleted = db.delete_rules(DEMO_ORG_ID)
+                    st.success(f"Deleted {deleted or len(existing)} rule(s).")
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Delete failed: {e}")
+    with col_d3:
+        if st.button("🗑️ Delete Both", use_container_width=True):
+            try:
+                v = db.get_vendors(DEMO_ORG_ID)
+                r = db.get_rules(DEMO_ORG_ID)
+                if not v and not r:
+                    st.warning("No vendors or rules found — nothing to delete.")
+                else:
+                    if v:
+                        db.delete_vendors(DEMO_ORG_ID)
+                    if r:
+                        db.delete_rules(DEMO_ORG_ID)
+                    st.success(f"Deleted {len(v)} vendor(s) and {len(r)} rule(s).")
+                    st.rerun()
+            except Exception as e:
+                st.error(f"Delete failed: {e}")
 
     st.markdown("---")
 
