@@ -1,0 +1,23 @@
+{
+  "sample_invoice": {
+    "vendor": "Acme Software Inc",
+    "invoice_number": "INV-20240101",
+    "amount": 4500.00,
+    "date": "2024-01-15",
+    "po_number": "PO-8837",
+    "tax_id": "TX-123456"
+  },
+  "expected_checks": [
+    {"rule": "vendor_approved", "status": "pass"},
+    {"rule": "invoice_number_exists", "status": "pass"},
+    {"rule": "invoice_number_pattern", "status": "pass"},
+    {"rule": "amount_exists", "status": "pass"},
+    {"rule": "amount_lte_limit", "status": "pass"},
+    {"rule": "amount_gte_zero", "status": "pass"},
+    {"rule": "po_number_exists", "status": "pass"},
+    {"rule": "invoice_date_exists", "status": "pass"},
+    {"rule": "tax_id_matches_vendor", "status": "pass"}
+  ],
+  "expected_risk_score": 0,
+  "expected_verdict": "APPROVE"
+}

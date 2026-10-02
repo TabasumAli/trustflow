@@ -1,0 +1,13 @@
+vendor_name,tax_id,status,country,category
+Acme Software Inc,TX-123456,approved,US,software
+Apex Logistics Ltd,TX-654321,approved,UK,logistics
+TechCorp Global,TX-889900,approved,DE,hardware
+Indus Solutions,TX-112233,approved,PK,consulting
+Emirates Supplies,TX-445566,approved,AE,supplies
+CloudScale Systems,TX-778899,approved,US,software
+EuroConsulting GmbH,TX-334455,approved,DE,consulting
+Silk Road Trading,TX-990011,approved,PK,supplies
+Omni Logistics FZE,TX-556677,pending,AE,logistics
+ShadowTech Labs,TX-223344,blocked,US,software
+Global Hardware Co,TX-667788,pending,UK,hardware
+Vanguard Advisory,TX-881122,blocked,PK,consulting

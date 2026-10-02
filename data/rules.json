@@ -1,0 +1,85 @@
+{
+  "rules": [
+    {
+      "id": "vendor_approved",
+      "description": "Vendor must be in approved vendor list",
+      "field": "vendor",
+      "check": "in_list",
+      "value": null,
+      "weight": 30,
+      "severity": "high"
+    },
+    {
+      "id": "invoice_number_exists",
+      "description": "Invoice number must exist",
+      "field": "invoice_number",
+      "check": "exists",
+      "value": null,
+      "weight": 10,
+      "severity": "medium"
+    },
+    {
+      "id": "invoice_number_pattern",
+      "description": "Invoice number must match pattern INV-XXXX",
+      "field": "invoice_number",
+      "check": "matches",
+      "value": "^INV-[A-Za-z0-9]+$",
+      "weight": 10,
+      "severity": "low"
+    },
+    {
+      "id": "amount_exists",
+      "description": "Amount must be present",
+      "field": "amount",
+      "check": "exists",
+      "value": null,
+      "weight": 15,
+      "severity": "high"
+    },
+    {
+      "id": "amount_lte_limit",
+      "description": "Amount must not exceed 10000",
+      "field": "amount",
+      "check": "lte",
+      "value": 10000,
+      "weight": 20,
+      "severity": "high"
+    },
+    {
+      "id": "amount_gte_zero",
+      "description": "Amount must be greater than 0",
+      "field": "amount",
+      "check": "gte",
+      "value": 0,
+      "weight": 10,
+      "severity": "medium"
+    },
+    {
+      "id": "po_number_exists",
+      "description": "PO number must exist",
+      "field": "po_number",
+      "check": "exists",
+      "value": null,
+      "weight": 15,
+      "severity": "medium"
+    },
+    {
+      "id": "invoice_date_exists",
+      "description": "Invoice date must be present",
+      "field": "date",
+      "check": "exists",
+      "value": null,
+      "weight": 10,
+      "severity": "low"
+    },
+    {
+      "id": "tax_id_matches_vendor",
+      "description": "Tax ID must match vendor's registered tax ID",
+      "field": "tax_id",
+      "check": "matches",
+      "value": null,
+      "weight": 20,
+      "severity": "high"
+    }
+  ]
+}

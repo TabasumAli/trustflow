@@ -1,0 +1,28 @@
+================================================================================
+                                INVOICE
+================================================================================
+
+Vendor: Acme Software Inc
+123 Tech Boulevard, Suite 400
+San Francisco, CA 94105
+Tax ID: TX-123456
+
+Bill To: TrustFlow Operations
+Invoice Number: INV-20240101
+Date: 2024-01-15
+PO Number: PO-8837
+
+--------------------------------------------------------------------------------
+Description                                  Qty      Unit Price        Total
+--------------------------------------------------------------------------------
+Enterprise Cloud Software License - Annual     1        4,000.00     4,000.00
+Premium Technical Support Subscription         1          500.00       500.00
+--------------------------------------------------------------------------------
+
+Subtotal: 4500.00
+Tax (0%): 0.00
+Amount Due: 4500.00
+
+Payment Terms: Net 30
+Thank you for your business!
+================================================================================

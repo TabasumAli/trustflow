@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 crewai==1.14.3
 crewai-tools==1.14.3
 litellm
@@ -8,3 +9,15 @@ pypdf
 pandas
 python-dotenv
 pydantic
+=======
+crewai==1.14.3
+crewai-tools==1.14.3
+litellm
+openai
+langsmith
+streamlit
+pypdf
+pandas
+python-dotenv
+pydantic
+>>>>>>> 072630e (fix: resolve crew template vars, wire retry on Groq rate limits)
