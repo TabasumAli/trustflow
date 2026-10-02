@@ -228,3 +228,21 @@ def list_audits(org_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         return response.data or []
     except Exception as e:
         raise ValueError(f"Error listing audits: {e}")
+
+
+def delete_vendors(org_id: str) -> int:
+    try:
+        client = get_client()
+        response = client.table("vendors").delete().eq("org_id", org_id).execute()
+        return len(response.data or [])
+    except Exception as e:
+        raise ValueError(f"Error deleting vendors: {e}")
+
+
+def delete_rules(org_id: str) -> int:
+    try:
+        client = get_client()
+        response = client.table("rules").delete().eq("org_id", org_id).execute()
+        return len(response.data or [])
+    except Exception as e:
+        raise ValueError(f"Error deleting rules: {e}")

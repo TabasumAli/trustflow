@@ -8,15 +8,15 @@ from backend.agents.router_agent import build_router_agent
 from backend.agents.reporter_agent import build_reporter_agent
 
 
-def build_crew() -> Crew:
-    big = get_llm()
-    small = get_small_llm()
+def build_crew(api_key: str | None = None) -> Crew:
+    llm = get_llm(api_key)
+    small = get_small_llm(api_key)
 
     intake = build_intake_agent(small)
-    extractor = build_extractor_agent(big)
+    extractor = build_extractor_agent(llm)
     validator = build_validator_agent(small)
     router = build_router_agent(small)
-    reporter = build_reporter_agent(big)
+    reporter = build_reporter_agent(llm)
 
     intake_task = Task(
         description=(
@@ -30,8 +30,8 @@ def build_crew() -> Crew:
 
     extractor_task = Task(
         description=(
-            "Call the extract_invoice_fields tool with the invoice text below, "
-            "and return ONLY the tool's output.\n\n"
+            "Extract the invoice fields from the text below and return ONLY a JSON "
+            "object with keys: vendor, invoice_number, amount, date, po_number, tax_id.\n\n"
             "Invoice text:\n{invoice_text}"
         ),
         expected_output="JSON object with vendor, invoice_number, amount, date, po_number, tax_id.",

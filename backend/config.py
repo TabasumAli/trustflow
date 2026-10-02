@@ -4,6 +4,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from langsmith.integrations.otel import OtelSpanProcessor
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.instrumentation.crewai import CrewAIInstrumentor
+from opentelemetry.instrumentation.openai import OpenAIInstrumentor
+
+# Get or create tracer provider
+current_provider = trace.get_tracer_provider()
+if isinstance(current_provider, TracerProvider):
+    tracer_provider = current_provider
+else:
+    tracer_provider = TracerProvider()
+    trace.set_tracer_provider(tracer_provider)
+
+# Add LangSmith's span processor
+tracer_provider.add_span_processor(OtelSpanProcessor())
+
+# Instrument CrewAI and OpenAI
+CrewAIInstrumentor().instrument(tracer_provider=tracer_provider)
+OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATA_DIR = BASE_DIR / "data"
@@ -21,6 +42,14 @@ LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "false").lower() == "true"
 LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT", "trustflow")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
+os.environ["CREWAI_TRACING_ENABLED"] = "true"
+os.environ["CREWAI_DISABLE_TELEMETRY"] = "false"
+
+os.environ["LANGSMITH_PROJECT"] = LANGSMITH_PROJECT
+os.environ["LANGSMITH_TRACING"] = "true" if LANGSMITH_TRACING else "false"
+os.environ["LANGSMITH_API_KEY"] = LANGSMITH_API_KEY
+os.environ.setdefault("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
 
 MODEL_NAME = "groq/openai/gpt-oss-120b"
 TEMPERATURE = 0.2

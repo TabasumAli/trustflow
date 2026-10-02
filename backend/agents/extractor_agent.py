@@ -47,16 +47,16 @@ def build_extractor_agent(llm) -> Agent:
     return Agent(
         role="Invoice Extractor",
         goal=(
-            "Extract invoice fields by calling the extract_invoice_fields tool. "
-            "Return ONLY the tool's JSON output."
+            "Read the invoice text and return ONLY a JSON object with keys: "
+            "vendor, invoice_number, amount, date, po_number, tax_id. "
+            "No tool calls, no prose, no markdown. If a field is missing, set it to null."
         ),
         backstory=(
-            "You extract structured fields from invoices. You always call the "
-            "extract_invoice_fields tool and return its output verbatim."
+            "You are a deterministic field extractor. You always return strict JSON "
+            "and nothing else."
         ),
-        tools=[extract_invoice_fields_tool],
         llm=llm,
         verbose=False,
         allow_delegation=False,
-        max_iter=3,
+        max_iter=2,
     )
