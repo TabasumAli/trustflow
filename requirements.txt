@@ -1,0 +1,10 @@
+crewai==1.14.3
+crewai-tools==1.14.3
+litellm
+openai
+langsmith
+streamlit
+pypdf
+pandas
+python-dotenv
+pydantic
