@@ -12,8 +12,11 @@ def validate_invoice_tool(invoice_json: str) -> str:
     import json
 
     invoice = json.loads(invoice_json)
-    vendors = load_vendors()
-    checks = check_all_rules(invoice, vendors)
+    org_id = invoice.pop("_org_id", None)
+    from backend import tools
+
+    vendors = tools.load_vendors(org_id)
+    checks = tools.check_all_rules(invoice, vendors)
     return json.dumps({"checks": checks})
 
 

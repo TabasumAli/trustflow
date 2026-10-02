@@ -1,34 +1,28 @@
-import json
-from datetime import datetime, timezone
+from typing import Any, Dict, List
 
-from backend.config import AUDIT_LOG
-
-
-def log_event(event: str, data: dict | None = None) -> None:
-    entry = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "event": event,
-        "data": data or {},
-    }
-    with open(AUDIT_LOG, "a", encoding="utf-8") as f:
-        f.write(json.dumps(entry) + "\n")
+from backend import db
 
 
-def read_log() -> list[dict]:
-    if not AUDIT_LOG.exists():
-        return []
-    entries = []
-    with open(AUDIT_LOG, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                try:
-                    entries.append(json.loads(line))
-                except json.JSONDecodeError:
-                    continue
-    return entries
+def log_event(org_id: str, event: str, data: Dict[str, Any]) -> None:
+    try:
+        client = db.get_client()
+        client.table("audit_logs").insert({
+            "org_id": org_id,
+            "event": event,
+            "data": data,
+        }).execute()
+    except Exception as e:
+        print(f"Warning: failed to log event: {e}")
 
 
-def clear_log() -> None:
-    if AUDIT_LOG.exists():
-        AUDIT_LOG.unlink()
+def read_log(org_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    return db.list_audits(org_id, limit=limit)
+
+
+def clear_log(org_id: str) -> bool:
+    try:
+        client = db.get_client()
+        client.table("audit_logs").delete().eq("org_id", org_id).execute()
+        return True
+    except Exception:
+        return False

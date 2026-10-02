@@ -11,27 +11,39 @@ from backend.guardrails import (
 from backend.audit import log_event
 from backend.gate import evaluate
 from backend.crew import build_crew
+from backend import db
 
 
-def run_audit(file_bytes: bytes, filename: str) -> dict:
-    log_event("audit_start", {"filename": filename})
+def run_audit(file_bytes: bytes, filename: str, org_id: str) -> dict:
+    log_event(org_id, "audit_start", {"filename": filename})
 
     try:
         validate_input(file_bytes, filename)
     except ValueError as e:
-        log_event("audit_rejected", {"reason": str(e)})
+        log_event(org_id, "audit_rejected", {"reason": str(e)})
         return _error_result(str(e))
-
-    upload_path = UPLOADS_DIR / filename
-    upload_path.write_bytes(file_bytes)
 
     try:
         invoice_text = read_invoice(file_bytes, filename)
     except Exception as e:
-        log_event("audit_failed", {"stage": "read", "error": str(e)})
+        log_event(org_id, "audit_failed", {"stage": "read", "error": str(e)})
         return _error_result(f"Failed to read invoice: {e}")
 
-    log_event("invoice_read", {"chars": len(invoice_text)})
+    log_event(org_id, "invoice_read", {"chars": len(invoice_text)})
+
+    try:
+        invoice_id = db.save_invoice(
+            org_id=org_id,
+            filename=filename,
+            file_url=None,
+            raw_text=invoice_text,
+        )
+    except Exception as e:
+        log_event(org_id, "audit_failed", {"stage": "save_invoice", "error": str(e)})
+        return _error_result(f"Failed to save invoice: {e}")
+
+    from backend import tools
+    tools.set_org_id(org_id)
 
     crew = build_crew()
     last_err = None
@@ -45,14 +57,14 @@ def run_audit(file_bytes: bytes, filename: str) -> dict:
             msg = str(e)
             if "RateLimitError" in msg or "rate_limit" in msg or "429" in msg:
                 wait = 20 * (attempt + 1)
-                log_event("rate_limit_retry", {"attempt": attempt + 1, "wait": wait})
+                log_event(org_id, "rate_limit_retry", {"attempt": attempt + 1, "wait": wait})
                 time.sleep(wait)
                 continue
-            log_event("audit_failed", {"stage": "crew", "error": msg})
+            log_event(org_id, "audit_failed", {"stage": "crew", "error": msg})
             return _error_result(f"Crew execution failed: {e}")
 
     if last_err is not None:
-        log_event("audit_failed", {"stage": "crew", "error": str(last_err)})
+        log_event(org_id, "audit_failed", {"stage": "crew", "error": str(last_err)})
         return _error_result(f"Crew execution failed after retries: {last_err}")
 
     try:
@@ -61,7 +73,7 @@ def run_audit(file_bytes: bytes, filename: str) -> dict:
         routing = _parse_task_output(crew, 3)
         report = _parse_task_output(crew, 4)
     except Exception as e:
-        log_event("audit_failed", {"stage": "parse", "error": str(e)})
+        log_event(org_id, "audit_failed", {"stage": "parse", "error": str(e)})
         return _error_result(f"Failed to parse agent output: {e}")
 
     risk_score = routing.get("risk_score", 100)
@@ -86,10 +98,17 @@ def run_audit(file_bytes: bytes, filename: str) -> dict:
     try:
         validate_output(result)
     except ValueError as e:
-        log_event("audit_failed", {"stage": "output", "error": str(e)})
+        log_event(org_id, "audit_failed", {"stage": "output", "error": str(e)})
         return _error_result(f"Output validation failed: {e}")
 
-    log_event("audit_complete", {
+    try:
+        audit_id = db.save_audit(invoice_id, org_id, result)
+        db.save_audit_checks(audit_id, checks)
+        result["audit_id"] = audit_id
+    except Exception as e:
+        log_event(org_id, "audit_failed", {"stage": "save_audit", "error": str(e)})
+
+    log_event(org_id, "audit_complete", {
         "verdict": result["verdict"],
         "risk_score": result["risk_score"],
         "confidence": gate["confidence"],

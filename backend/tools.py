@@ -11,7 +11,14 @@ from backend.config import (
     RULES_JSON,
 )
 
+_CURRENT_ORG_ID = None
 
+
+def set_org_id(org_id: str) -> None:
+    global _CURRENT_ORG_ID
+    _CURRENT_ORG_ID = org_id
+
+    
 def read_pdf(file_bytes: bytes) -> str:
     reader = PdfReader(io.BytesIO(file_bytes))
     pages = [page.extract_text() or "" for page in reader.pages]
@@ -31,14 +38,16 @@ def read_invoice(file_bytes: bytes, filename: str) -> str:
     raise ValueError(f"Unsupported file type: {ext}")
 
 
-def load_vendors() -> list[dict]:
-    with open(VENDORS_CSV, newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+def load_vendors(org_id: str = None) -> list[dict]:
+    from backend import db
+
+    return db.get_vendors(org_id or _CURRENT_ORG_ID)
 
 
-def load_rules() -> list[dict]:
-    with open(RULES_JSON, encoding="utf-8") as f:
-        return json.load(f)["rules"]
+def load_rules(org_id: str = None) -> list[dict]:
+    from backend import db
+
+    return db.get_rules(org_id or _CURRENT_ORG_ID)
 
 
 def find_vendor(vendor_name: str, vendors: list[dict]) -> dict | None:
@@ -78,7 +87,9 @@ def check_rule(rule: dict, invoice: dict, vendors: list[dict]) -> dict:
                 reason = f"Vendor '{value}' not found in vendor list"
             elif vendor.get("status") != "approved":
                 status = "fail"
-                reason = f"Vendor '{value}' status is '{vendor.get('status')}', not approved"
+                reason = (
+                    f"Vendor '{value}' status is '{vendor.get('status')}', not approved"
+                )
 
     elif check == "lte":
         if _is_missing(value):
@@ -149,3 +160,21 @@ def score_risk(checks: list[dict]) -> int:
     failed_weight = sum(c.get("weight", 0) for c in checks if c["status"] == "fail")
     score = round((failed_weight / total_weight) * 100)
     return max(0, min(100, score))
+
+
+def save_vendors_from_csv(org_id: str, csv_bytes: bytes) -> int:
+    from backend import db
+
+    content = csv_bytes.decode("utf-8")
+    reader = csv.DictReader(io.StringIO(content))
+    rows = list(reader)
+    return db.upsert_vendors(org_id, rows)
+
+
+def save_rules_from_json(org_id: str, json_bytes: bytes) -> int:
+    from backend import db
+
+    content = json_bytes.decode("utf-8")
+    parsed = json.loads(content)
+    rules_list = parsed.get("rules", parsed) if isinstance(parsed, dict) else parsed
+    return db.upsert_rules(org_id, rules_list)
