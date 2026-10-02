@@ -2,7 +2,7 @@ crewai==1.14.3
 crewai-tools==1.14.3
 litellm
 openai
-langsmith
+langsmith[otel]
 streamlit
 pypdf
 pandas
@@ -10,3 +10,7 @@ python-dotenv
 pydantic
 supabase
 reportlab
+opentelemetry-instrumentation-crewai
+opentelemetry-instrumentation-openai
+opentelemetry-sdk
+opentelemetry-api
