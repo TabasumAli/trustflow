@@ -8,3 +8,4 @@ pypdf
 pandas
 python-dotenv
 pydantic
+supabase
