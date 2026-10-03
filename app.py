@@ -22,7 +22,7 @@ st.set_page_config(
 # ============================================================
 # THEME
 # ============================================================
-BG_VIDEO_URL = ""  # optional: URL of an mp4/webm to play (muted, looping) behind the UI
+BG_VIDEO_URL = ""
 
 THEMES = {
     "dark": {
@@ -63,6 +63,12 @@ if "dark_mode" not in st.session_state:
 if "groq_api_key" not in st.session_state:
     st.session_state.groq_api_key = ""
 
+if "last_result" not in st.session_state:
+    st.session_state.last_result = None
+
+if "last_result_file" not in st.session_state:
+    st.session_state.last_result_file = None
+
 T = THEMES["dark" if st.session_state.dark_mode else "light"]
 VERDICT_COLORS = {
     "APPROVE": (T["ok"], T["ok_bg"]),
@@ -82,7 +88,6 @@ TF_CSS = """
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap');
     :root { __ROOT_VARS__ }
 
-    /* ---------- Motion ---------- */
     @keyframes tf-gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     @keyframes tf-float-a { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(8vw,6vh) scale(1.15); } }
     @keyframes tf-float-b { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-7vw,-8vh) scale(1.2); } }
@@ -100,7 +105,6 @@ TF_CSS = """
         animation: tf-gradient 40s ease infinite;
         color: var(--tf-text);
     }
-    /* Floating light orbs (the animated backdrop) */
     .stApp::before, .stApp::after {
         content: ""; position: fixed; border-radius: 50%; will-change: transform;
         pointer-events: none; z-index: 0;
@@ -132,7 +136,6 @@ TF_CSS = """
     [data-testid="stCaptionContainer"], .stCaption { color: var(--tf-muted) !important; }
     hr { border-color: var(--tf-border) !important; }
 
-    /* ---------- No sidebar: top navigation (tf-topbar-applied) ---------- */
     section[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"],
     [data-testid="collapsedControl"] { display: none !important; }
     header[data-testid="stHeader"] { display: none; }
@@ -170,7 +173,6 @@ TF_CSS = """
     .st-key-nav label[data-testid="stRadioOption"] > div > div:first-child { display: none; }
     .st-key-topbar [data-testid="stToggle"] label p { color: var(--tf-muted); font-size: 13px; }
 
-    /* ---------- Animated background layers ---------- */
     .tf-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
     .tf-grid {
         position: absolute; inset: -50% -10% 0 -10%; opacity: .35;
@@ -195,7 +197,6 @@ TF_CSS = """
         100% { transform: translateY(-110vh) translateX(40px); opacity: 0; }
     }
 
-    /* ---------- Hero ---------- */
     .tf-hero {
         display: block; max-width: 940px;
         padding: 8px 0 28px; animation: tf-rise .5s ease both;
@@ -223,7 +224,6 @@ TF_CSS = """
         backdrop-filter: blur(16px); box-shadow: var(--tf-shadow); animation: tf-rise .9s .15s ease both;
     }
 
-    /* ---------- Page header ---------- */
     .tf-page-head { margin-bottom: 28px; animation: tf-rise .6s ease both; }
     .stApp h1.tf-page-title {
         font-family: 'Cormorant Garamond', Georgia, serif; font-size: 42px; font-weight: 600; letter-spacing: 0;
@@ -232,7 +232,6 @@ TF_CSS = """
     .tf-page-sub { font-size: 14px; color: var(--tf-muted); margin-top: 6px; }
     .tf-rule { height: 1px; width: 72px; background: var(--tf-btn-grad); margin-top: 14px; border-radius: 2px; }
 
-    /* ---------- Cards (glass) ---------- */
     .tf-card, .tf-stat, .tf-verdict, .tf-table-wrap, .tf-empty {
         background: var(--tf-surface); border: 1px solid var(--tf-border);
         box-shadow: var(--tf-shadow); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
@@ -254,7 +253,6 @@ TF_CSS = """
     .tf-stat-label { font-size: 11px; color: var(--tf-muted); font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
     .tf-stat-value { font-family: 'IBM Plex Sans', sans-serif; font-size: 26px; font-weight: 600; color: var(--tf-text); margin-top: 4px; }
 
-    /* ---------- Verdict ---------- */
     .tf-verdict {
         position: relative; border-radius: 6px; padding: 26px 28px;
         display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; margin-bottom: 16px;
@@ -276,7 +274,6 @@ TF_CSS = """
     .tf-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
     .tf-badge.lg { font-size: 13px; padding: 5px 16px; }
 
-    /* ---------- Tables ---------- */
     .tf-table-wrap { border-radius: 8px; overflow: auto; max-height: 420px; }
     table.tf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     table.tf-table th {
@@ -290,7 +287,6 @@ TF_CSS = """
     table.tf-table tbody tr:hover td { background: var(--tf-accent-soft); }
     table.tf-kv td:first-child { width: 42%; color: var(--tf-muted); font-weight: 500; }
 
-    /* ---------- Empty state / flow ---------- */
     .tf-empty { border-style: dashed; border-radius: 8px; padding: 28px; text-align: center; color: var(--tf-muted); font-size: 14px; }
     .tf-flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
     .tf-flow .tf-card:nth-child(2) { animation-delay: .1s; } .tf-flow .tf-card:nth-child(3) { animation-delay: .2s; }
@@ -303,7 +299,6 @@ TF_CSS = """
     .tf-flow p { margin: 0; font-size: 13px; color: var(--tf-muted); line-height: 1.6; }
     @media (max-width: 800px) { .tf-flow { grid-template-columns: 1fr; } .stApp h1.tf-page-title { font-size: 30px; } }
 
-    /* ---------- Buttons ---------- */
     .stButton > button, .stDownloadButton > button {
         border-radius: 6px; font-weight: 600; font-size: 14px; padding: 9px 20px; position: relative; overflow: hidden;
         border: 1px solid var(--tf-border); background: var(--tf-surface); color: var(--tf-text);
@@ -325,7 +320,6 @@ TF_CSS = """
     }
     .stButton > button p, .stDownloadButton > button p { color: inherit; }
 
-    /* ---------- Inputs ---------- */
     .stTextInput input, .stTextArea textarea, div[data-baseweb="select"] > div, div[data-baseweb="input"] {
         background: var(--tf-solid) !important; color: var(--tf-text) !important;
         border-color: var(--tf-border) !important; border-radius: 6px !important;
@@ -431,7 +425,6 @@ def stat_row(items: list) -> None:
 
 
 def html_table(headers: list, rows: list, extra_class: str = "") -> str:
-    """rows: list of lists whose cells are already-safe HTML strings."""
     head = "".join(f"<th>{escape(h)}</th>" for h in headers) if headers else ""
     thead = f"<thead><tr>{head}</tr></thead>" if headers else ""
     body = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
@@ -756,6 +749,12 @@ def page_audit() -> None:
             if not st.session_state.groq_api_key:
                 st.caption("Add your Groq API key in Settings to enable audits.")
 
+    # Reset stale result when the uploaded file changes (or is cleared)
+    current_file = uploaded.name if uploaded is not None else None
+    if st.session_state.get("last_result_file") != current_file:
+        st.session_state.last_result = None
+        st.session_state.last_result_file = current_file
+
     if run_clicked and uploaded:
         result = None
         with st.status("Running audit crew…", expanded=True) as status:
@@ -774,6 +773,7 @@ def page_audit() -> None:
                     st.error(f"Audit error: {result['error']}")
                 elif result:
                     st.session_state.last_result = result
+                    st.session_state.last_result_file = uploaded.name
                     status.update(label="Audit complete", state="complete", expanded=False)
                     toast_success("Audit complete")
 
@@ -813,7 +813,6 @@ def chart_theme(chart: alt.Chart) -> alt.Chart:
 
 
 def require_database() -> bool:
-    """Show a setup notice and return False when Supabase credentials are missing."""
     if DB_READY:
         return True
     st.markdown(
@@ -959,7 +958,6 @@ def page_history() -> None:
 # PAGE: DATA
 # ============================================================
 def delete_flow(label: str, targets: tuple) -> None:
-    """targets: subset of ('vendors', 'rules')."""
     try:
         v = db.get_vendors(DEMO_ORG_ID) if "vendors" in targets else []
         r = db.get_rules(DEMO_ORG_ID) if "rules" in targets else []
