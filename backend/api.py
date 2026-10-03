@@ -1,7 +1,8 @@
 import time
+import json
 
 from backend.config import UPLOADS_DIR
-from backend.tools import read_invoice
+from backend.tools import read_invoice, load_rules, load_vendors
 from backend.guardrails import (
     validate_input,
     validate_output,
@@ -58,11 +59,23 @@ def run_audit(
         from backend import tools
         tools.set_org_id(org_id)
 
+        try:
+            rules = load_rules(org_id)
+            vendors = load_vendors(org_id)
+        except Exception as e:
+            log_event(org_id, "audit_failed", {"stage": "load_context", "error": str(e)})
+            log_audit_error(run, f"load_context: {e}")
+            return _error_result(f"Failed to load rules or vendors: {e}")
+
         crew = build_crew(api_key)
         last_err = None
         for attempt in range(3):
             try:
-                crew.kickoff(inputs={"invoice_text": invoice_text})
+                crew.kickoff(inputs={
+                    "invoice_text": invoice_text,
+                    "rules_json": json.dumps(rules, separators=(",", ":")),
+                    "vendors_json": json.dumps(vendors, separators=(",", ":")),
+                })
                 last_err = None
                 break
             except Exception as e:
@@ -84,16 +97,25 @@ def run_audit(
 
         try:
             invoice = _parse_task_output(crew, 1)
-            checks = _parse_task_output(crew, 2).get("checks", [])
-            routing = _parse_task_output(crew, 3)
+            _llm_checks = _parse_task_output(crew, 2).get("checks", [])
+            _llm_routing = _parse_task_output(crew, 3)
             report = _parse_task_output(crew, 4)
         except Exception as e:
             log_event(org_id, "audit_failed", {"stage": "parse", "error": str(e)})
             log_audit_error(run, f"parse: {e}")
             return _error_result(f"Failed to parse agent output: {e}")
 
-        risk_score = routing.get("risk_score", 100)
-        verdict = routing.get("verdict") or expected_verdict_from_score(risk_score)
+        # Deterministic override: compute the real verdict from Python, not the LLM
+        from backend.tools import check_all_rules, score_risk
+
+        checks = check_all_rules(invoice, vendors)
+        risk_score = score_risk(checks)
+        verdict = expected_verdict_from_score(risk_score)
+        routing = {
+            "risk_score": risk_score,
+            "verdict": verdict,
+            "reason": "Deterministic rule evaluation",
+        }
 
         result = {
             "invoice": invoice,

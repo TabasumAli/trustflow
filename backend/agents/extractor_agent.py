@@ -1,62 +1,74 @@
-import json
-import re
+"""
+extractor_agent.py — Part 1 (Intake & Extraction)
+Owner: Joti
 
-from crewai import Agent
-from crewai.tools import tool
+Real CrewAI agent for field extraction (replaces the temporary regex
+stub). Always returns strict JSON with exactly these keys: vendor,
+invoice_number, amount, date, po_number, tax_id. Any field not present
+in the document comes back as null — the agent must never invent one.
+"""
 
+from typing import Optional
 
-def _extract_fields(text: str) -> dict:
-    def find(pattern: str, flags=0):
-        m = re.search(pattern, text, flags)
-        return m.group(1).strip() if m else None
-
-    vendor = find(r"Vendor:\s*(.+)")
-    invoice_number = find(r"Invoice\s*Number:\s*([^\s]+)")
-    date = find(r"Date:\s*([\d\-/]+)")
-    po_number = find(r"PO\s*Number:\s*([^\s]+)")
-    tax_id = find(r"Tax\s*ID:\s*([A-Za-z\-0-9 ]+)")
-    amount_raw = find(r"Amount\s*Due:\s*\$?([\d,\.]+)")
-
-    amount = None
-    if amount_raw:
-        try:
-            amount = float(amount_raw.replace(",", ""))
-        except ValueError:
-            amount = None
-
-    if tax_id:
-        tax_id = tax_id.replace(" ", "").upper()
-
-    return {
-        "vendor": vendor,
-        "invoice_number": invoice_number,
-        "amount": amount,
-        "date": date,
-        "po_number": po_number,
-        "tax_id": tax_id,
-    }
+from crewai import Agent, Task
+from pydantic import BaseModel
 
 
-@tool("extract_invoice_fields")
-def extract_invoice_fields_tool(invoice_text: str) -> str:
-    """Extract invoice fields from raw invoice text. Returns JSON string."""
-    return json.dumps(_extract_fields(invoice_text))
+class ExtractedFields(BaseModel):
+    vendor: Optional[str] = None
+    invoice_number: Optional[str] = None
+    amount: Optional[float] = None
+    date: Optional[str] = None
+    po_number: Optional[str] = None
+    tax_id: Optional[str] = None
 
 
 def build_extractor_agent(llm) -> Agent:
+    """
+    Builds the Extractor Agent. `llm` is passed in by crew.py (e.g. from
+    backend.llm.get_llm()) — this file does no LLM setup of its own.
+    """
     return Agent(
-        role="Invoice Extractor",
+        role="Field Extraction Specialist",
         goal=(
-            "Read the invoice text and return ONLY a JSON object with keys: "
+            "Extract exactly these six fields from a business document: "
             "vendor, invoice_number, amount, date, po_number, tax_id. "
-            "No tool calls, no prose, no markdown. If a field is missing, set it to null."
+            "Never invent a value — if a field genuinely isn't in the "
+            "text, return null for it."
         ),
         backstory=(
-            "You are a deterministic field extractor. You always return strict JSON "
-            "and nothing else."
+            "You are a meticulous data-entry expert for TrustFlow. Every "
+            "field you extract is logged in the audit trail with your "
+            "reasoning, so guessing is not acceptable — accuracy matters "
+            "more than completeness."
         ),
         llm=llm,
-        verbose=False,
         allow_delegation=False,
-        max_iter=2,
+        verbose=True,
+    )
+
+
+def build_extraction_task(agent: Agent, document_text: str) -> Task:
+    """
+    Task factory paired with build_extractor_agent(). Uses
+    output_pydantic so CrewAI enforces the schema at the framework
+    level — the result is guaranteed to be valid JSON with exactly
+    these six keys, nothing extra, nothing missing.
+    """
+    return Task(
+        description=(
+            "Extract the following fields from the document text below: "
+            "vendor, invoice_number, amount, date, po_number, tax_id.\n\n"
+            f"--- DOCUMENT TEXT ---\n{document_text[:3000]}\n--- END ---\n\n"
+            "Rules:\n"
+            "- amount must be a plain number (no currency symbols, no commas)\n"
+            "- if a field is not present in the text, set it to null\n"
+            "- do not invent, guess, or infer a value that isn't written in the text"
+        ),
+        expected_output=(
+            "A JSON object with exactly these keys: vendor, invoice_number, "
+            "amount, date, po_number, tax_id."
+        ),
+        agent=agent,
+        output_pydantic=ExtractedFields,
     )

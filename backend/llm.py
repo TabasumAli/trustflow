@@ -14,7 +14,7 @@ def get_llm(api_key: str | None = None) -> LLM:
 
 def get_small_llm(api_key: str | None = None) -> LLM:
     return LLM(
-        model="groq/openai/gpt-oss-120b",
+        model="groq/openai/gpt-oss-20b",
         api_key=api_key or GROQ_API_KEY,
         temperature=0.1,
         parallel_tool_calls=False,

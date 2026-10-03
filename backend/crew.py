@@ -20,29 +20,35 @@ def build_crew(api_key: str | None = None) -> Crew:
 
     intake_task = Task(
         description=(
-            "Return JSON with keys file_type, page_count, quality, notes. "
-            "This is informational only.\n\n"
-            "Invoice text:\n{invoice_text}"
+            "Classify the document below. Respond with ONLY one word: "
+            "invoice, form, application, or unknown.\n\n"
+            "Document:\n{invoice_text}"
         ),
-        expected_output="JSON object with file_type, page_count, quality, notes.",
+        expected_output="A single word: invoice, form, application, or unknown.",
         agent=intake,
     )
 
     extractor_task = Task(
         description=(
-            "Extract the invoice fields from the text below and return ONLY a JSON "
-            "object with keys: vendor, invoice_number, amount, date, po_number, tax_id.\n\n"
-            "Invoice text:\n{invoice_text}"
+            "Extract exactly these fields from the document: vendor, "
+            "invoice_number, amount, date, po_number, tax_id. "
+            "Return ONLY JSON. If a field is missing, set it to null.\n\n"
+            "Document:\n{invoice_text}"
         ),
-        expected_output="JSON object with vendor, invoice_number, amount, date, po_number, tax_id.",
+        expected_output="JSON with vendor, invoice_number, amount, date, po_number, tax_id.",
         agent=extractor,
         context=[intake_task],
     )
 
     validator_task = Task(
         description=(
-            "Take the extracted invoice JSON from the previous task and call the "
-            "validate_invoice tool with it. Return ONLY the tool's output."
+            "Apply each business rule below to the extracted invoice JSON "
+            "from the previous task. For each rule decide pass or fail and "
+            "give a one-line reason.\n\n"
+            "Rules:\n{rules_json}\n\n"
+            "Approved vendors:\n{vendors_json}\n\n"
+            "Return ONLY JSON with a single key 'checks' — a list of objects "
+            "with keys: rule, description, status, reason, weight, severity."
         ),
         expected_output="JSON object with a 'checks' list.",
         agent=validator,
@@ -51,8 +57,10 @@ def build_crew(api_key: str | None = None) -> Crew:
 
     router_task = Task(
         description=(
-            "Take the checks JSON from the previous task and call the "
-            "route_invoice tool with it. Return ONLY the tool's output."
+            "Using the checks from the previous task, compute a risk score "
+            "(0-100) as the weighted percentage of failed rules, then pick "
+            "a verdict: APPROVE if score <= 30, REVIEW if <= 70, REJECT "
+            "otherwise. Return ONLY JSON with keys: risk_score, verdict, reason."
         ),
         expected_output="JSON object with risk_score, verdict, reason.",
         agent=router,
@@ -61,9 +69,10 @@ def build_crew(api_key: str | None = None) -> Crew:
 
     reporter_task = Task(
         description=(
-            "Using the extracted invoice, the rule checks, and the routing result "
-            "from the previous tasks, write a 2-3 sentence audit summary and a "
-            "one-line next action. Return ONLY JSON with keys 'summary' and 'next_action'."
+            "Using the extracted invoice, the rule checks, and the routing "
+            "result from the previous tasks, write a 2-3 sentence audit "
+            "summary and a one-line next action. Return ONLY JSON with keys "
+            "'summary' and 'next_action'."
         ),
         expected_output="JSON object with summary and next_action.",
         agent=reporter,

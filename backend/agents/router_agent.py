@@ -24,27 +24,31 @@ def route_invoice_tool(checks_json: str) -> str:
     else:
         reason = "All rules passed"
 
-    return json.dumps({
-        "risk_score": score,
-        "verdict": verdict,
-        "reason": reason,
-    })
+    return json.dumps(
+        {
+            "risk_score": score,
+            "verdict": verdict,
+            "reason": reason,
+        }
+    )
 
 
 def build_router_agent(llm) -> Agent:
     return Agent(
         role="Invoice Router",
         goal=(
-            "Determine the final verdict (APPROVE, REVIEW, or REJECT) by calling "
-            "the route_invoice tool. Return ONLY the tool's JSON output."
+            "You receive a checks list from the previous task. Compute a risk "
+            "score (0-100) as the weighted percentage of failed rules, then "
+            "pick a verdict: APPROVE if score <= 30, REVIEW if <= 70, "
+            "REJECT otherwise. Return ONLY JSON with keys: risk_score, "
+            "verdict, reason."
         ),
         backstory=(
-            "You are a routing specialist. You never guess a verdict. "
-            "You always call the route_invoice tool and return its output verbatim."
+            "You are a routing specialist. You apply the thresholds exactly "
+            "and never guess."
         ),
-        tools=[route_invoice_tool],
         llm=llm,
         verbose=False,
         allow_delegation=False,
-        max_iter=3,
+        max_iter=2,
     )
