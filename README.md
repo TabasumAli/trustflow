@@ -208,8 +208,3 @@ Filter traces by verdict, org, or filename to isolate problem cases.
 - The demo uses a hardcoded `DEMO_ORG_ID`; multi-tenancy requires Supabase Auth
 - Validator and Router LLM outputs are overridden by a deterministic Python rule engine to guarantee correct verdicts
 
-## Team
-
-- **Backend / Integration** — Tabasum
-- **Agents (Intake, Extractor)** — Joti
-- **Frontend** — Ayesha
